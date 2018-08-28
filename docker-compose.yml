@@ -1,9 +1,37 @@
-version: '3'
+version: '3.5'
+
+networks:
+  local_beach:
+    name: local_beach
 
 services:
+  dns:
+    image: flownative/beach-dns:1
+    container_name: local_beach_dns
+    networks:
+      - local_beach
+    ports:
+      - "53:53/udp"
+    environment:
+      - HOSTS_FILE=/etc/localbeach/hosts
+      - EXTERNAL_DNS=1.1.1.1
+    volumes:
+      - ./dns/hosts:/etc/localbeach/hosts
+  nginx:
+    image: jwilder/nginx-proxy
+    container_name: local_beach_nginx
+    networks:
+      - local_beach
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/proxy.conf:/etc/nginx/proxy.conf:ro
   database:
     image: mariadb:10.2
-    container_name: local_beach_mariadb
+    container_name: local_beach_database
+    networks:
+      - local_beach
     volumes:
       - ./.Docker/MariaDB:/var/lib/mysql
     environment:
